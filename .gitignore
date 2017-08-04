@@ -1,0 +1,5 @@
+*.pyc
+.DS_Store
+build
+dist
+atq.egg-info

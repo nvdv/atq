@@ -1,0 +1,7 @@
+[MESSAGES CONTROL]
+disable=locally-disabled, exec-used, too-many-instance-attributes,
+        wrong-import-order, superfluous-parens, fixme, invalid-name, no-member, too-many-arguments, locally-enabled, too-many-locals,
+        too-few-public-methods
+
+# Maximum number of characters on a single line.
+max-line-length=80
