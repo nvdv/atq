@@ -3,6 +3,7 @@ import glob
 import pip
 import shlex
 import subprocess
+import unittest
 
 from distutils import cmd
 from setuptools import setup
@@ -24,8 +25,9 @@ class RunLintCommand(cmd.Command):
 
     def run(self):
         subprocess.check_call(shlex.split(
-            'pylint --reports=n --rcfile=.pylintrc ' + ' '.join(
-                glob.glob('atq/*.py'))))
+            'pylint --reports=n --rcfile=.pylintrc ' +
+            ' '.join(glob.glob('atq/*.py')) + ' ' +
+            ' '.join(glob.glob('atq/tests/*.py'))))
 
 
 class RunDepsInstallCommand(cmd.Command):
@@ -41,6 +43,23 @@ class RunDepsInstallCommand(cmd.Command):
 
     def run(self):
         pip.main(['install', '-r', 'requirements.txt'])
+
+
+class RunEndToEndTestCommand(cmd.Command):
+    """Runs all end to end tests."""
+    description = 'Run end to end tests'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        suite = unittest.TestLoader().discover(
+            'atq/tests/.', pattern='*.py')
+        unittest.TextTestRunner(verbosity=2, buffer=True).run(suite)
 
 
 class AtqInstall(install):
@@ -74,6 +93,7 @@ setup(
     ],
     cmdclass={
         'lint': RunLintCommand,
+        'test': RunEndToEndTestCommand,
         'deps_install': RunDepsInstallCommand,
     },
 )
