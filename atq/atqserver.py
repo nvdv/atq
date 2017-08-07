@@ -1,9 +1,11 @@
 """atq worker module."""
 import asyncio
 import cloudpickle
-import concurrent.futures
 import logging
 import pickle
+import signal
+
+from atq import executor
 
 logging.basicConfig(
     format='%(asctime)s.%(msecs)03d %(levelname)s - %(message)s',
@@ -17,6 +19,11 @@ def task_wrapper(serialized_task):
     return cloudpickle.dumps(task())
 
 
+def _silence_sigint():
+    """Silences SIGINT"""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 class QServer:
     """Task queue server.
 
@@ -24,13 +31,13 @@ class QServer:
         host: Hostname of the server.
         port: Port number of the server.
         loop: Event loop to run in.
-        executor: Executor that will run tasks from clients.
+        task_executor: Executor that will run tasks from clients.
         num_executed_tasks: An integer that keeps track of completed tasks.
     """
-    def __init__(self, host, port, event_loop, executor):
+    def __init__(self, host, port, event_loop, task_executor):
         self.host, self.port = host, port
         self.loop = event_loop
-        self.executor = executor
+        self.executor = task_executor
         self.num_executed_tasks = 0
 
     async def handle_task(self, reader, writer):
@@ -74,6 +81,6 @@ class QServer:
             An instance of the server.
         """
         event_loop = asyncio.get_event_loop()
-        executor = concurrent.futures.ProcessPoolExecutor(
-            max_workers=num_workers)
-        return cls(host, port, event_loop, executor)
+        pool_executor = executor.ProcessPoolExecutorWithInit(
+            max_workers=num_workers, initializer=_silence_sigint)
+        return cls(host, port, event_loop, pool_executor)
