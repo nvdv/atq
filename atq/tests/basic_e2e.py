@@ -50,8 +50,9 @@ class SimpleE2ETest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         os.kill(cls.p.pid, signal.SIGINT)
+        cls.p.communicate()
 
-    def testBasicMultipleRuns(self):
+    def testBasic(self):
         """Tests running basic functions."""
         for _ in range(NUM_RUNS):
             result = asyncio.get_event_loop().run_until_complete(
@@ -61,7 +62,7 @@ class SimpleE2ETest(unittest.TestCase):
                 simple_test(3, 50))
             self.assertEqual(result, 97)
 
-    def testExceptionMultipleRuns(self):
+    def testExceptions(self):
         """Tests exception processing."""
         for _ in range(NUM_RUNS):
             with self.assertRaises(Exception):

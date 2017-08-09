@@ -44,7 +44,6 @@ class MultipleServersE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Servers should be able to import this module to function properly.
         test_env = os.environ.copy()
         test_env["PYTHONPATH"] = TESTS_PATH
         cls.p1 = subprocess.Popen(
@@ -62,8 +61,11 @@ class MultipleServersE2ETest(unittest.TestCase):
         os.kill(cls.p1.pid, signal.SIGINT)
         os.kill(cls.p2.pid, signal.SIGINT)
         os.kill(cls.p3.pid, signal.SIGINT)
+        cls.p1.communicate()
+        cls.p2.communicate()
+        cls.p3.communicate()
 
-    def testBasicMultipleRuns(self):
+    def testBasic(self):
         """Tests basic functions with multiple servers."""
         for _ in range(NUM_RUNS):
             result = asyncio.get_event_loop().run_until_complete(
@@ -73,7 +75,7 @@ class MultipleServersE2ETest(unittest.TestCase):
                 simple_test(3, 50))
             self.assertEqual(result, 97)
 
-    def testExceptionMultipleRuns(self):
+    def testExceptions(self):
         """Tests exception processing with multiple servers."""
         for _ in range(NUM_RUNS):
             with self.assertRaises(Exception):

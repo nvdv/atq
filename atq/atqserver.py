@@ -53,6 +53,7 @@ class QServer:
         await writer.drain()
         if writer.can_write_eof():
             writer.write_eof()
+        writer.close()
         self.num_executed_tasks += 1
 
     def run_forever(self):

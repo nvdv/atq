@@ -5,14 +5,24 @@ import pickle
 import random
 import warnings
 
+from collections import defaultdict
+
+WAIT_TIME = 0.1  # seconds
+MAX_RETRY_COUNT = 100
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
 
 
-class WorkerConnectionError(Exception):
+class WorkerConnectionError(Error):
     """Raised on socket read error."""
+    pass
+
+
+class MaxRetriesReachedError(Error):
+    """Raised when maximum number of retries is reached."""
     pass
 
 
@@ -39,13 +49,16 @@ class Q:
     """Task queue client.
 
     Attributes:
-        _workers: Ccollection of available workers specified by
+        _workers: Collection of available workers specified by
                   hostnames and ports.
         _scheduler: Generator that returns host and port of selected worker.
+        _retries_per_server: Defaultdict that stores number of retries for
+                             each task queue server.
     """
     def __init__(self, workers):
         self._workers = workers
         self._scheduler = random_scheduler(self._workers)
+        self._retries_per_server = defaultdict(int)
 
     async def _run(self, func, args=(), kwargs={}):  # pylint: disable=dangerous-default-value
         """Runs function in the task queue.
@@ -60,15 +73,24 @@ class Q:
         Raises:
             WorkerConnectionError: Raised on error reading data from job
                                    queue worker.
+            MaxRetriesReachedError: Raised when maximum number of retries for
+                                    specific server is reached.
         """
         while True:
-            host, port = next(self._scheduler)
+            server_address = next(self._scheduler)
             try:
-                reader, writer = await asyncio.open_connection(host, port)
+                reader, writer = await asyncio.open_connection(*server_address)
             except OSError:
+                self._retries_per_server[server_address] += 1
+                if self._retries_per_server[server_address] > MAX_RETRY_COUNT:
+                    raise MaxRetriesReachedError(
+                        'Max number of retries is reached for %s:%s' %
+                        server_address)
                 warnings.warn(
-                    "Can't connect to %s:%s. Retrying..." % (host, port))
+                    "Can't connect to %s:%s. Retrying..." % server_address)
+                await asyncio.sleep(WAIT_TIME)
             else:
+                self._retries_per_server[server_address] = 0
                 break
 
         curr_host, *_ = writer.get_extra_info('sockname')
@@ -85,6 +107,7 @@ class Q:
             raise WorkerConnectionError
 
         task_result = pickle.loads(serialized_result)
+        writer.close()
         if isinstance(task_result, BaseException):
             raise task_result
         return task_result
