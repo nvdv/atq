@@ -3,3 +3,9 @@
 build
 dist
 atq.egg-info
+.vscode/
+bin
+include
+lib
+pyvenv.cfg
+pip-selfcheck.json

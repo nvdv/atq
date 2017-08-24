@@ -1,1 +1,1 @@
-cloudpickle>=0.2
+cloudpickle>=0.4
