@@ -58,7 +58,7 @@ class QServer:
 
     def run_forever(self):
         """Starts server."""
-        logging.info('Starting worker on %s:%s', self.host, self.port)
+        logging.info('Starting server on %s:%s', self.host, self.port)
         self.loop.run_until_complete(
             asyncio.start_server(
                 self.handle_task, host=self.host, port=self.port))
