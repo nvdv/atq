@@ -61,7 +61,7 @@ You can find more examples in `examples` subdirectory.
 ## Installation
 At present `atq` can be installed from this repo
 ```sh
-pip3 install -e git+https://github.com/nvdv/atq.git@master#egg=atq
+pip3 install git+https://github.com/nvdv/atq.git@master
 ```
 
 ## Testing
