@@ -1,3 +1,21 @@
+"""aiohttp example.
+
+Simple web app that checks numbers for primality.
+
+To run this example run workers first:
+
+    python3 -m atq --host localhost --port 12345
+    python3 -m atq --host localhost --port 12346
+
+and then run
+
+    python3 examples/web.py
+
+and
+
+    curl http://localhost:8080/17
+
+"""
 import json
 import sys
 sys.path.append('../atq')  # Required to run examples without installation.

@@ -1,4 +1,4 @@
-"""atq worker module."""
+"""atq server module."""
 import asyncio
 import cloudpickle
 import logging

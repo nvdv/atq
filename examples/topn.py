@@ -1,3 +1,19 @@
+"""Top N words example.
+
+Gets text file, counts number of words in them and returns top N words in
+every file.
+
+To run this example run workers first:
+
+    python3 -m atq --host localhost --port 12345
+    python3 -m atq --host localhost --port 12346
+    python3 -m atq --host localhost --port 12347
+
+and then run
+
+    python3 examples/topn.py
+
+"""
 import asyncio
 import pprint
 import requests

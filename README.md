@@ -8,12 +8,15 @@ distributed workers.
 ## Usage
 First, you should start workers on the servers you plan to use for task execution
 ```sh
-atq --host <hostname> --port <port-number> --worker <num-workers>
+atqserver --host <hostname> --port <port-number> --worker <num-workers>
 ```
 where
 - `<hostname>` is a hostname of the server
 - `<port-number>` is a port that server will listen on
 - `<num-workers>` is a number of worker processes
+
+Please note that code of tasks should be accessible by `atq`, so it's advised to
+run `atq` server from your project root directory in more complex situations.
 
 Then you will need to create a client using hostnames and ports of initialized
 servers:

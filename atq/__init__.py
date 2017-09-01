@@ -1,2 +1,2 @@
-"""Simplifies imports for package."""
+"""Simplifies imports for this package."""
 from atq.atqclient import Q

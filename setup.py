@@ -87,6 +87,11 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Topic :: Software Development',
     ],
+    entry_points={
+        'console_scripts': [
+            'atqserver = atq.__main__:main'
+        ]
+    },
     install_requires=[
         str(req.req) for req in parse_requirements('requirements.txt',
                                                    session=PipSession())

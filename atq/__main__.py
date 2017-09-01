@@ -4,7 +4,8 @@ from atq import atqserver
 
 NUM_WORKERS_DEFAULT = 4
 
-if __name__ == '__main__':
+def main():
+    """Main function of the module."""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-H', '--host', dest='host', type=str, required=True,
@@ -21,3 +22,7 @@ if __name__ == '__main__':
         worker_server.run_forever()
     except KeyboardInterrupt:
         worker_server.shutdown()
+
+
+if __name__ == '__main__':
+    main()
