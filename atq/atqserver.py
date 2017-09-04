@@ -32,13 +32,11 @@ class QServer:
         port: Port number of the server.
         loop: Event loop to run in.
         task_executor: Executor that will run tasks from clients.
-        num_executed_tasks: An integer that keeps track of completed tasks.
     """
     def __init__(self, host, port, event_loop, task_executor):
         self.host, self.port = host, port
         self.loop = event_loop
         self.executor = task_executor
-        self.num_executed_tasks = 0
 
     async def handle_task(self, reader, writer):
         """Handles task execution."""
@@ -54,7 +52,6 @@ class QServer:
         if writer.can_write_eof():
             writer.write_eof()
         writer.close()
-        self.num_executed_tasks += 1
 
     def run_forever(self):
         """Starts server."""
