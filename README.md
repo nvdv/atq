@@ -33,6 +33,7 @@ Finally you can use `atq` in your code:
 
 ```python
 import atq
+import asyncio
 import requests
 from collections import ChainMap
 from collections import Counter
