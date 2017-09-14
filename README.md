@@ -62,9 +62,8 @@ top = asyncio.get_event_loop().run_until_complete(get_top_words(URLS, 10))
 You can find more examples in `examples` subdirectory.
 
 ## Installation
-At present `atq` can be installed from this repo
 ```sh
-pip3 install git+https://github.com/nvdv/atq.git@master
+pip3 install atq
 ```
 
 ## Testing

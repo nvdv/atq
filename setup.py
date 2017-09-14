@@ -96,6 +96,7 @@ setup(
         str(req.req) for req in parse_requirements('requirements.txt',
                                                    session=PipSession())
     ],
+    python_requires='>=3.5',
     cmdclass={
         'lint': RunLintCommand,
         'test': RunEndToEndTestCommand,
