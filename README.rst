@@ -10,10 +10,12 @@ Usage
 -----
 First, you should start workers on the servers you plan to use for task execution
 
-    .. code-block ::
-        atqserver --host <hostname> --port <port-number> --worker <num-workers>
+.. code-block ::
+
+   atqserver --host <hostname> --port <port-number> --worker <num-workers>
 
 where
+
 - ``<hostname>`` is a hostname of the server
 - ``<port-number>`` is a port that server will listen on
 - ``<num-workers>`` is a number of worker processes
@@ -25,17 +27,19 @@ situations.
 Then you will need to create a client using hostnames and ports of initialized
 servers:
 
-.. highlight:: python
-    import atq
+.. code-block:: python
 
-    q = atq.Q([
+   import atq
+
+   q = atq.Q([
         ("localhost", 12345),
     ])
 
 
 Finally you can use ``atq`` in your code:
 
-.. highlight:: python
+.. code-block:: python
+
     import atq
     import asyncio
     import requests
@@ -68,12 +72,14 @@ You can find more examples in ``examples`` subdirectory.
 Installation
 ------------
 .. code-block ::
+
     pip3 install atq
 
 
 Testing
 -------
 .. code-block ::
+
     python3 setup.py test
 
 
