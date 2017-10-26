@@ -68,9 +68,16 @@ class AtqInstall(install):
     def run(self):
         install.run(self)
 
+
+def get_description():
+    """Reads README.rst file."""
+    with open('README.rst') as readme_file:
+        return readme_file.read()
+
+
 setup(
     name='atq',
-    version='0.0.1',
+    version='0.0.2',
     packages=['atq'],
     description="Async task queue for Python",
     url='http://github.com/nvdv/atq',
@@ -102,4 +109,5 @@ setup(
         'test': RunEndToEndTestCommand,
         'deps_install': RunDepsInstallCommand,
     },
+    long_description=get_description()
 )
