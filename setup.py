@@ -70,8 +70,8 @@ class AtqInstall(install):
 
 
 def get_description():
-    """Reads README.rst file."""
-    with open('README.rst') as readme_file:
+    """Reads README.md file."""
+    with open('README.md') as readme_file:
         return readme_file.read()
 
 
