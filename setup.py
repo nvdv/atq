@@ -10,7 +10,7 @@ def get_description():
 
 setup(
     name='atq',
-    version='0.0.2',
+    version='0.0.3',
     packages=['atq'],
     description='Async task queue for Python',
     long_description=get_description(),
@@ -18,7 +18,7 @@ setup(
     url='https://github.com/nvdv/atq',
     license='BSD',
     author='nvdv',
-    author_email='aflatnine@gmail.com',
+    author_email='nick.volynets@gmail.com',
     keywords=['task queue', 'asyncio', 'async'],
     classifiers=[
         'Development Status :: 3 - Alpha',

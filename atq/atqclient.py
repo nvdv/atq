@@ -13,17 +13,14 @@ MAX_RETRY_COUNT = 100
 
 class Error(Exception):
     """Base class for exceptions in this module."""
-    pass
 
 
 class WorkerConnectionError(Error):
     """Raised on socket read error."""
-    pass
 
 
 class MaxRetriesReachedError(Error):
     """Raised when maximum number of retries is reached."""
-    pass
 
 
 class Task:
@@ -36,7 +33,7 @@ class Task:
         return self.func(*self.args, **self.kwargs)
 
     def __str__(self):
-        return '<%s> from %s' % (self.func.__name__, self.host)
+        return f'<{self.func.__name__}> from {self.host}'
 
 
 def random_scheduler(workers):
@@ -84,14 +81,16 @@ class Q:
             server_address = next(self._scheduler)
             try:
                 reader, writer = await asyncio.open_connection(*server_address)
-            except OSError:
+            except OSError as exc:
                 self._retries_per_server[server_address] += 1
                 if self._retries_per_server[server_address] > MAX_RETRY_COUNT:
+                    host, port = server_address
                     raise MaxRetriesReachedError(
-                        'Max number of retries is reached for %s:%s' %
-                        server_address)
+                        f'Max number of retries is reached for {host}:{port}'
+                    ) from exc
+                host, port = server_address
                 warnings.warn(
-                    "Can't connect to %s:%s. Retrying..." % server_address)
+                    f"Can't connect to {host}:{port}. Retrying...")
                 await asyncio.sleep(WAIT_TIME)
             else:
                 self._retries_per_server[server_address] = 0
@@ -107,8 +106,8 @@ class Q:
 
         try:
             serialized_result = await reader.read()
-        except ConnectionResetError:
-            raise WorkerConnectionError
+        except ConnectionResetError as exc:
+            raise WorkerConnectionError from exc
 
         task_result = pickle.loads(serialized_result)
         writer.close()

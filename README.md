@@ -71,7 +71,7 @@ You can find more examples in the `examples` subdirectory.
 ## Installation
 
 ```bash
-pip3 install atq
+pip3 install git+https://github.com/nvdv/atq.git
 ```
 
 ## Testing

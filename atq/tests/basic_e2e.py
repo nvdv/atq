@@ -33,7 +33,7 @@ class SimpleE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        (cls.port,) = _helpers.find_free_ports(1, HOST)
+        cls.port = _helpers.find_free_ports(1, HOST)[0]
         cls.p = _helpers.start_server(HOST, cls.port, NUM_WORKERS)
 
     @classmethod

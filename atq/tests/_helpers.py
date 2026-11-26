@@ -42,19 +42,19 @@ def wait_for_server(proc, host, port, timeout=5.0):
     while time.monotonic() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(
-                'atq server exited prematurely with code %s' % proc.returncode)
+                f'atq server exited prematurely with code {proc.returncode}')
         try:
             with socket.create_connection((host, port), timeout=0.1):
                 return
         except OSError:
             time.sleep(0.05)
     raise TimeoutError(
-        'Timed out waiting for atq server on %s:%s' % (host, port))
+        f'Timed out waiting for atq server on {host}:{port}')
 
 
 def start_server(host, port, num_workers, startup_timeout=5.0):
     """Starts an atq server subprocess and waits until it is listening."""
-    proc = subprocess.Popen(
+    proc = subprocess.Popen(  # pylint: disable=consider-using-with
         [sys.executable, '-m', 'atq', '-H', host, '-p', str(port),
          '-w', str(num_workers)],
         env=build_test_env(),
@@ -84,7 +84,7 @@ def start_servers(host, ports, num_workers, startup_timeout=5.0):
 
 
 def stop_server(proc, timeout=5.0):
-    """Stops a server subprocess with SIGINT and falls back to terminate/kill."""
+    """Stops a server subprocess with SIGINT, falling back to terminate/kill."""
     if proc.poll() is not None:
         proc.communicate()
         return

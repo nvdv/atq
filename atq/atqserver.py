@@ -25,7 +25,7 @@ def task_wrapper(serialized_task):
 
 
 def _init_worker():
-    """Initializes a worker process by ignoring SIGINT and setting up logging."""
+    """Initializes a worker process (ignores SIGINT and sets up logging)."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     configure_logging()
 
