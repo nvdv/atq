@@ -17,8 +17,11 @@ and
 
 """
 import json
+import os
 import sys
-sys.path.append('../atq')  # Required to run examples without installation.
+
+# Required to run examples without installation.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import atq
 from aiohttp import web
 

@@ -1,9 +1,12 @@
 *.pyc
+__pycache__/
 .DS_Store
 build
 dist
-atq.egg-info
+*.egg-info/
 .vscode/
+.venv/
+venv/
 bin
 include
 lib

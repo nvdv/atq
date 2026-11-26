@@ -15,19 +15,22 @@ and then run
 
 """
 import asyncio
+import os
 import pprint
 import requests
 import sys
-sys.path.append('../atq')  # Required to run examples without installation.
+
+# Required to run examples without installation.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import atq
 
 from collections import ChainMap
 from collections import Counter
 
 URLS = {
-    "http://www.gutenberg.org/cache/epub/996/pg996.txt",
-    "http://www.gutenberg.org/files/1342/1342-0.txt",
-    "http://www.gutenberg.org/cache/epub/1661/pg1661.txt",
+    "https://raw.githubusercontent.com/python/peps/main/peps/pep-0008.rst",
+    "https://raw.githubusercontent.com/python/peps/main/peps/pep-0492.rst",
+    "https://raw.githubusercontent.com/python/peps/main/peps/pep-0634.rst",
 }
 
 q = atq.Q([

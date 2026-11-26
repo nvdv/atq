@@ -4,6 +4,7 @@ import operator
 import os
 import signal
 import subprocess
+import sys
 import unittest
 
 from atq import Q
@@ -47,13 +48,13 @@ class MultipleServersE2ETest(unittest.TestCase):
         test_env = os.environ.copy()
         test_env["PYTHONPATH"] = TESTS_PATH
         cls.p1 = subprocess.Popen(
-            ['python3', '-m', 'atq', '-H', HOST1, '-p', str(PORT1),
+            [sys.executable, '-m', 'atq', '-H', HOST1, '-p', str(PORT1),
              '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
         cls.p2 = subprocess.Popen(
-            ['python3', '-m', 'atq', '-H', HOST2, '-p', str(PORT2),
+            [sys.executable, '-m', 'atq', '-H', HOST2, '-p', str(PORT2),
              '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
         cls.p3 = subprocess.Popen(
-            ['python3', '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
+            [sys.executable, '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
              '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
 
     @classmethod

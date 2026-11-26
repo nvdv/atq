@@ -4,6 +4,7 @@ import operator
 import os
 import signal
 import subprocess
+import sys
 import unittest
 
 from atq import Q
@@ -44,7 +45,7 @@ class SimpleE2ETest(unittest.TestCase):
         test_env = os.environ.copy()
         test_env["PYTHONPATH"] = TESTS_PATH
         cls.p = subprocess.Popen(
-            ['python3', '-m', 'atq', '-H', HOST, '-p', str(PORT),
+            [sys.executable, '-m', 'atq', '-H', HOST, '-p', str(PORT),
              '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
 
     @classmethod

@@ -4,14 +4,14 @@
 It is designed to run costly functions outside main event loop using
 distributed workers.
 
-`atq` requires Python 3.5+ and is distributed under BSD license.
+`atq` requires Python 3.9+ and is distributed under BSD license.
 
 ## Usage
 
 First, you should start workers on the servers you plan to use for task execution:
 
 ```bash
-atqserver --host <hostname> --port <port-number> --worker <num-workers>
+atqserver --host <hostname> --port <port-number> --workers <num-workers>
 ```
 
 where
@@ -66,7 +66,7 @@ async def get_top_words(urls, n):
 top = asyncio.run(get_top_words(URLS, 10))
 ```
 
-You can find more examples in `examples` subdirectory.
+You can find more examples in the `examples` subdirectory.
 
 ## Installation
 
@@ -77,7 +77,7 @@ pip3 install atq
 ## Testing
 
 ```bash
-python3 setup.py test
+python3 -m unittest discover -s atq/tests -p '*.py'
 ```
 
 ## License
