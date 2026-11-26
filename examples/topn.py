@@ -51,5 +51,5 @@ async def get_top_words(urls, n):
 
 
 if __name__ == '__main__':
-    top = asyncio.get_event_loop().run_until_complete(get_top_words(URLS, 10))
+    top = asyncio.run(get_top_words(URLS, 10))
     pprint.pprint(top)

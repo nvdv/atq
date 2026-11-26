@@ -26,8 +26,8 @@ async def simple_test(x, y):
 
 
 def raise_exception():
-    """Raises gemeric exception."""
-    raise Exception('Hello, world!')
+    """Raises a ValueError exception."""
+    raise ValueError('Hello, world!')
 
 
 async def exception_test():
@@ -55,15 +55,13 @@ class SimpleE2ETest(unittest.TestCase):
     def testBasic(self):
         """Tests running basic functions."""
         for _ in range(NUM_RUNS):
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(1, 2))
+            result = asyncio.run(simple_test(1, 2))
             self.assertEqual(result, -1)
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(3, 50))
+            result = asyncio.run(simple_test(3, 50))
             self.assertEqual(result, 97)
 
     def testExceptions(self):
         """Tests exception processing."""
         for _ in range(NUM_RUNS):
-            with self.assertRaises(Exception):
-                asyncio.get_event_loop().run_until_complete(exception_test())
+            with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
+                asyncio.run(exception_test())

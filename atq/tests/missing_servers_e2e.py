@@ -17,14 +17,14 @@ TESTS_PATH = 'atq/tests'
 NUM_RUNS = 5  # Number of runs in tests.
 
 
-q = Q([
+SERVERS = [
     (HOST1, PORT1),
     (HOST2, PORT2),
     (HOST3, PORT3),
-])
+]
 
 
-async def simple_test(x, y):
+async def simple_test(q, x, y):
     """Executes some basic functions in the task queue."""
     s1 = q.q(operator.add, x, y)
     s2 = q.q(operator.mul, x, y)
@@ -32,11 +32,11 @@ async def simple_test(x, y):
 
 
 def raise_exception():
-    """Raises gemeric exception."""
-    raise Exception('Hello, world!')
+    """Raises a ValueError exception."""
+    raise ValueError('Hello, world!')
 
 
-async def exception_test():
+async def exception_test(q):
     """Raises exception in the task queue."""
     return await q.q(raise_exception)
 
@@ -62,21 +62,22 @@ class OneMissingServerE2ETest(unittest.TestCase):
         cls.p1.communicate()
         cls.p3.communicate()
 
+    def setUp(self):
+        self.q = Q(SERVERS)
+
     def testBasic(self):
         """Tests basic functions when one server is unresponsive."""
         for _ in range(NUM_RUNS):
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(1, 2))
+            result = asyncio.run(simple_test(self.q, 1, 2))
             self.assertEqual(result, -1)
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(3, 50))
+            result = asyncio.run(simple_test(self.q, 3, 50))
             self.assertEqual(result, 97)
 
     def testExceptions(self):
         """Tests exception processing when one server is unresponsive."""
         for _ in range(NUM_RUNS):
-            with self.assertRaises(Exception):
-                asyncio.get_event_loop().run_until_complete(exception_test())
+            with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
+                asyncio.run(exception_test(self.q))
 
 
 class TwoMissingServersE2ETest(unittest.TestCase):
@@ -95,21 +96,22 @@ class TwoMissingServersE2ETest(unittest.TestCase):
         os.kill(cls.p3.pid, signal.SIGINT)
         cls.p3.communicate()
 
+    def setUp(self):
+        self.q = Q(SERVERS)
+
     def testBasic(self):
         """Tests basic functions when two servers are unresponsive."""
         for _ in range(NUM_RUNS):
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(1, 2))
+            result = asyncio.run(simple_test(self.q, 1, 2))
             self.assertEqual(result, -1)
-            result = asyncio.get_event_loop().run_until_complete(
-                simple_test(3, 50))
+            result = asyncio.run(simple_test(self.q, 3, 50))
             self.assertEqual(result, 97)
 
     def testExceptions(self):
         """Tests exception processing when two servers are unresponsive."""
         for _ in range(NUM_RUNS):
-            with self.assertRaises(Exception):
-                asyncio.get_event_loop().run_until_complete(exception_test())
+            with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
+                asyncio.run(exception_test(self.q))
 
 
 class AllServersMissingE2ETest(unittest.TestCase):
@@ -124,8 +126,11 @@ class AllServersMissingE2ETest(unittest.TestCase):
     def tearDownClass(cls):
         atqclient.MAX_RETRY_COUNT = cls.retry_count
 
-    def testExceptionss(self):
+    def setUp(self):
+        self.q = Q(SERVERS)
+
+    def testExceptions(self):
         """Tests exceptions when all servers are unresponsive."""
         with self.assertRaises(atqclient.MaxRetriesReachedError):
             for _ in range(NUM_RUNS):
-                asyncio.get_event_loop().run_until_complete(exception_test())
+                asyncio.run(exception_test(self.q))

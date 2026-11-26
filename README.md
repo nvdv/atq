@@ -63,7 +63,7 @@ async def get_top_words(urls, n):
         *[q.q(top_words, url, n) for url in urls])
     return ChainMap(*tops_in_url)
 
-top = asyncio.get_event_loop().run_until_complete(get_top_words(URLS, 10))
+top = asyncio.run(get_top_words(URLS, 10))
 ```
 
 You can find more examples in `examples` subdirectory.

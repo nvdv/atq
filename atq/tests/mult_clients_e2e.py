@@ -29,8 +29,8 @@ async def simple_test(q, x, y):
 
 
 def raise_exception():
-    """Raises gemeric exception."""
-    raise Exception('Hello, world!')
+    """Raises a ValueError exception."""
+    raise ValueError('Hello, world!')
 
 
 async def exception_test(q):
@@ -69,11 +69,10 @@ class MultipleClientsE2ETest(unittest.TestCase):
 
         def run_basic_multiple(q):
             """Wraps test code to be used in separate thread."""
-            loop = asyncio.new_event_loop()
             for _ in range(NUM_RUNS):
-                result = loop.run_until_complete(simple_test(q, 1, 2))
+                result = asyncio.run(simple_test(q, 1, 2))
                 self.assertEqual(result, -1)
-                result = loop.run_until_complete(simple_test(q, 3, 50))
+                result = asyncio.run(simple_test(q, 3, 50))
                 self.assertEqual(result, 97)
 
         threading.Thread(target=run_basic_multiple, args=(q1,)).start()
@@ -85,10 +84,9 @@ class MultipleClientsE2ETest(unittest.TestCase):
 
         def run_exceptions_multiple(q):
             """Wraps test code to be used in separate thread."""
-            loop = asyncio.new_event_loop()
             for _ in range(NUM_RUNS):
-                with self.assertRaises(Exception):
-                    loop.run_until_complete(exception_test(q))
+                with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
+                    asyncio.run(exception_test(q))
 
         threading.Thread(target=run_exceptions_multiple, args=(q1,)).start()
         threading.Thread(target=run_exceptions_multiple, args=(q2,)).start()
