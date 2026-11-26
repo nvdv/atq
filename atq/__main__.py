@@ -21,6 +21,8 @@ def main():
     try:
         worker_server.run_forever()
     except KeyboardInterrupt:
+        pass
+    finally:
         worker_server.shutdown()
 
 
