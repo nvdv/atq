@@ -1,11 +1,10 @@
 """atq server module."""
 import asyncio
 import cloudpickle
+import concurrent.futures
 import logging
 import pickle
 import signal
-
-from atq import executor
 
 logging.basicConfig(
     format='%(asctime)s.%(msecs)03d %(levelname)s - %(message)s',
@@ -79,6 +78,6 @@ class QServer:
             An instance of the server.
         """
         event_loop = asyncio.get_event_loop()
-        pool_executor = executor.ProcessPoolExecutorWithInit(
+        pool_executor = concurrent.futures.ProcessPoolExecutor(
             max_workers=num_workers, initializer=_silence_sigint)
         return cls(host, port, event_loop, pool_executor)
