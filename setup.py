@@ -1,77 +1,10 @@
 """Setup script for atq."""
-import glob
-import pip
-import shlex
-import subprocess
-import unittest
-
-from distutils import cmd
 from setuptools import setup
-from setuptools.command.install import install
-from pip.download import PipSession
-from pip.req import parse_requirements
-
-
-class RunLintCommand(cmd.Command):
-    """Runs linter."""
-    description = 'Run linter'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        subprocess.check_call(shlex.split(
-            'pylint --reports=n --rcfile=.pylintrc ' +
-            ' '.join(glob.glob('atq/*.py')) + ' ' +
-            ' '.join(glob.glob('atq/tests/*.py'))))
-
-
-class RunDepsInstallCommand(cmd.Command):
-    """Installs project dependencies."""
-    description = 'Install dependencies'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        pip.main(['install', '-r', 'requirements.txt'])
-
-
-class RunEndToEndTestCommand(cmd.Command):
-    """Runs all end to end tests."""
-    description = 'Run end to end tests'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        suite = unittest.TestLoader().discover(
-            'atq/tests/.', pattern='*.py')
-        unittest.TextTestRunner(verbosity=2, buffer=True).run(suite)
-
-
-class AtqInstall(install):
-    """Installs package."""
-
-    def run(self):
-        install.run(self)
 
 
 def get_description():
     """Reads README.md file."""
-    with open('README.md') as readme_file:
+    with open('README.md', encoding='utf-8') as readme_file:
         return readme_file.read()
 
 
@@ -79,8 +12,10 @@ setup(
     name='atq',
     version='0.0.2',
     packages=['atq'],
-    description="Async task queue for Python",
-    url='http://github.com/nvdv/atq',
+    description='Async task queue for Python',
+    long_description=get_description(),
+    long_description_content_type='text/markdown',
+    url='https://github.com/nvdv/atq',
     license='BSD',
     author='nvdv',
     author_email='aflatnine@gmail.com',
@@ -91,7 +26,12 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
         'Topic :: Software Development',
     ],
     entry_points={
@@ -100,14 +40,7 @@ setup(
         ]
     },
     install_requires=[
-        str(req.req) for req in parse_requirements('requirements.txt',
-                                                   session=PipSession())
+        'cloudpickle>=3.0.0',
     ],
-    python_requires='>=3.5',
-    cmdclass={
-        'lint': RunLintCommand,
-        'test': RunEndToEndTestCommand,
-        'deps_install': RunDepsInstallCommand,
-    },
-    long_description=get_description()
+    python_requires='>=3.9',
 )
