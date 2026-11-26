@@ -1,29 +1,17 @@
 """Basic end to end tests for task queue with multiple servers."""
 import asyncio
 import operator
-import os
-import signal
-import subprocess
-import sys
 import unittest
 
 from atq import Q
+from atq.tests import _helpers
 
-HOST1, PORT1 = 'localhost', 12345
-HOST2, PORT2 = 'localhost', 12346
-HOST3, PORT3 = 'localhost', 12347
+HOST = 'localhost'
 NUM_WORKERS = 2
-TESTS_PATH = 'atq/tests'
 NUM_RUNS = 20  # Number of runs in tests.
 
 
-q = Q([
-    (HOST1, PORT1),
-    (HOST2, PORT2),
-    (HOST3, PORT3),
-])
-
-async def simple_test(x, y):
+async def simple_test(q, x, y):
     """Executes some basic functions in the task queue."""
     s1 = q.q(operator.add, x, y)
     s2 = q.q(operator.mul, x, y)
@@ -35,7 +23,7 @@ def raise_exception():
     raise ValueError('Hello, world!')
 
 
-async def exception_test():
+async def exception_test(q):
     """Raises exception in the task queue."""
     return await q.q(raise_exception)
 
@@ -45,37 +33,28 @@ class MultipleServersE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_env = os.environ.copy()
-        test_env["PYTHONPATH"] = TESTS_PATH
-        cls.p1 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST1, '-p', str(PORT1),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
-        cls.p2 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST2, '-p', str(PORT2),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
-        cls.p3 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
+        ports = _helpers.find_free_ports(3, HOST)
+        cls.servers = [(HOST, port) for port in ports]
+        cls.procs = _helpers.start_servers(HOST, ports, NUM_WORKERS)
 
     @classmethod
     def tearDownClass(cls):
-        os.kill(cls.p1.pid, signal.SIGINT)
-        os.kill(cls.p2.pid, signal.SIGINT)
-        os.kill(cls.p3.pid, signal.SIGINT)
-        cls.p1.communicate()
-        cls.p2.communicate()
-        cls.p3.communicate()
+        for proc in cls.procs:
+            _helpers.stop_server(proc)
+
+    def setUp(self):
+        self.q = Q(self.servers)
 
     def testBasic(self):
         """Tests basic functions with multiple servers."""
         for _ in range(NUM_RUNS):
-            result = asyncio.run(simple_test(1, 2))
+            result = asyncio.run(simple_test(self.q, 1, 2))
             self.assertEqual(result, -1)
-            result = asyncio.run(simple_test(3, 50))
+            result = asyncio.run(simple_test(self.q, 3, 50))
             self.assertEqual(result, 97)
 
     def testExceptions(self):
         """Tests exception processing with multiple servers."""
         for _ in range(NUM_RUNS):
             with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
-                asyncio.run(exception_test())
+                asyncio.run(exception_test(self.q))

@@ -1,26 +1,16 @@
 """End to end tests for task queue with multiple clients and servers."""
 import asyncio
+import concurrent.futures
 import operator
-import os
-import signal
-import subprocess
-import sys
-import threading
 import unittest
 
 from atq import Q
+from atq.tests import _helpers
 
-HOST1, PORT1 = 'localhost', 12345
-HOST2, PORT2 = 'localhost', 12346
-HOST3, PORT3 = 'localhost', 12347
+HOST = 'localhost'
 NUM_WORKERS = 2
-TESTS_PATH = 'atq/tests'
 NUM_RUNS = 5  # Number of runs in tests.
 
-
-q1 = Q([(HOST1, PORT1), (HOST2, PORT2), (HOST3, PORT3)])
-q2 = Q([(HOST1, PORT1), (HOST2, PORT2), (HOST3, PORT3)])
-q3 = Q([(HOST1, PORT1), (HOST2, PORT2), (HOST3, PORT3)])
 
 async def simple_test(q, x, y):
     """Executes some basic functions in the task queue."""
@@ -44,26 +34,17 @@ class MultipleClientsE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_env = os.environ.copy()
-        test_env["PYTHONPATH"] = TESTS_PATH
-        cls.p1 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST1, '-p', str(PORT1),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
-        cls.p2 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST2, '-p', str(PORT2),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
-        cls.p3 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
+        ports = _helpers.find_free_ports(3, HOST)
+        cls.servers = [(HOST, port) for port in ports]
+        cls.procs = _helpers.start_servers(HOST, ports, NUM_WORKERS)
 
     @classmethod
     def tearDownClass(cls):
-        os.kill(cls.p1.pid, signal.SIGINT)
-        os.kill(cls.p2.pid, signal.SIGINT)
-        os.kill(cls.p3.pid, signal.SIGINT)
-        cls.p1.communicate()
-        cls.p2.communicate()
-        cls.p3.communicate()
+        for proc in cls.procs:
+            _helpers.stop_server(proc)
+
+    def setUp(self):
+        self.clients = [Q(self.servers) for _ in range(3)]
 
     def testBasic(self):
         """Tests basic functions with multiple task queue clients."""
@@ -76,9 +57,13 @@ class MultipleClientsE2ETest(unittest.TestCase):
                 result = asyncio.run(simple_test(q, 3, 50))
                 self.assertEqual(result, 97)
 
-        threading.Thread(target=run_basic_multiple, args=(q1,)).start()
-        threading.Thread(target=run_basic_multiple, args=(q2,)).start()
-        threading.Thread(target=run_basic_multiple, args=(q3,)).start()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            futures = [
+                pool.submit(run_basic_multiple, q)
+                for q in self.clients
+            ]
+            for future in futures:
+                future.result()
 
     def testExceptions(self):
         """Tests exceptions with multiple task queue clients."""
@@ -89,6 +74,10 @@ class MultipleClientsE2ETest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, '^Hello, world!$'):
                     asyncio.run(exception_test(q))
 
-        threading.Thread(target=run_exceptions_multiple, args=(q1,)).start()
-        threading.Thread(target=run_exceptions_multiple, args=(q2,)).start()
-        threading.Thread(target=run_exceptions_multiple, args=(q3,)).start()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            futures = [
+                pool.submit(run_exceptions_multiple, q)
+                for q in self.clients
+            ]
+            for future in futures:
+                future.result()

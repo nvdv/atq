@@ -1,28 +1,15 @@
 """End to end tests when some task queue servers are unresponsive."""
 import asyncio
 import operator
-import os
-import signal
-import subprocess
-import sys
 import unittest
 
 from atq import atqclient
 from atq import Q
+from atq.tests import _helpers
 
-HOST1, PORT1 = 'localhost', 12345
-HOST2, PORT2 = 'localhost', 12346
-HOST3, PORT3 = 'localhost', 12347
+HOST = 'localhost'
 NUM_WORKERS = 2
-TESTS_PATH = 'atq/tests'
 NUM_RUNS = 5  # Number of runs in tests.
-
-
-SERVERS = [
-    (HOST1, PORT1),
-    (HOST2, PORT2),
-    (HOST3, PORT3),
-]
 
 
 async def simple_test(q, x, y):
@@ -47,24 +34,18 @@ class OneMissingServerE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_env = os.environ.copy()
-        test_env["PYTHONPATH"] = TESTS_PATH
-        cls.p1 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST1, '-p', str(PORT1),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
-        cls.p3 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
+        ports = _helpers.find_free_ports(3, HOST)
+        cls.servers = [(HOST, port) for port in ports]
+        cls.procs = _helpers.start_servers(
+            HOST, [ports[0], ports[2]], NUM_WORKERS)
 
     @classmethod
     def tearDownClass(cls):
-        os.kill(cls.p1.pid, signal.SIGINT)
-        os.kill(cls.p3.pid, signal.SIGINT)
-        cls.p1.communicate()
-        cls.p3.communicate()
+        for proc in cls.procs:
+            _helpers.stop_server(proc)
 
     def setUp(self):
-        self.q = Q(SERVERS)
+        self.q = Q(self.servers)
 
     def testBasic(self):
         """Tests basic functions when one server is unresponsive."""
@@ -86,19 +67,19 @@ class TwoMissingServersE2ETest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_env = os.environ.copy()
-        test_env["PYTHONPATH"] = TESTS_PATH
-        cls.p3 = subprocess.Popen(
-            [sys.executable, '-m', 'atq', '-H', HOST3, '-p', str(PORT3),
-             '-w', str(NUM_WORKERS)], env=test_env, stderr=subprocess.DEVNULL)
+        ports = _helpers.find_free_ports(3, HOST)
+        cls.servers = [(HOST, port) for port in ports]
+        cls.procs = [
+            _helpers.start_server(HOST, ports[2], NUM_WORKERS),
+        ]
 
     @classmethod
     def tearDownClass(cls):
-        os.kill(cls.p3.pid, signal.SIGINT)
-        cls.p3.communicate()
+        for proc in cls.procs:
+            _helpers.stop_server(proc)
 
     def setUp(self):
-        self.q = Q(SERVERS)
+        self.q = Q(self.servers)
 
     def testBasic(self):
         """Tests basic functions when two servers are unresponsive."""
@@ -122,13 +103,15 @@ class AllServersMissingE2ETest(unittest.TestCase):
     def setUpClass(cls):
         cls.retry_count = atqclient.MAX_RETRY_COUNT
         atqclient.MAX_RETRY_COUNT = 2
+        ports = _helpers.find_free_ports(3, HOST)
+        cls.servers = [(HOST, port) for port in ports]
 
     @classmethod
     def tearDownClass(cls):
         atqclient.MAX_RETRY_COUNT = cls.retry_count
 
     def setUp(self):
-        self.q = Q(SERVERS)
+        self.q = Q(self.servers)
 
     def testExceptions(self):
         """Tests exceptions when all servers are unresponsive."""

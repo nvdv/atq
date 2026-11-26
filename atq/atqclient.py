@@ -56,11 +56,13 @@ class Q:
                              each task queue server.
     """
     def __init__(self, workers):
-        self._workers = workers
+        self._workers = tuple(workers)
+        if not self._workers:
+            raise ValueError('workers must not be empty')
         self._scheduler = random_scheduler(self._workers)
         self._retries_per_server = defaultdict(int)
 
-    async def _run(self, func, args=(), kwargs={}):  # pylint: disable=dangerous-default-value
+    async def _run(self, func, args=(), kwargs=None):
         """Runs function in the task queue.
 
         Runs func in task queue and returns result or raises exception.
@@ -76,6 +78,8 @@ class Q:
             MaxRetriesReachedError: Raised when maximum number of retries for
                                     specific server is reached.
         """
+        if kwargs is None:
+            kwargs = {}
         while True:
             server_address = next(self._scheduler)
             try:
