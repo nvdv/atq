@@ -16,6 +16,7 @@ def main():
                         default=NUM_WORKERS_DEFAULT,
                         help='max number of workers')
     args = parser.parse_args()
+    atqserver.configure_logging()
     worker_server = atqserver.QServer.create(
         args.host, args.port, args.num_workers)
     try:

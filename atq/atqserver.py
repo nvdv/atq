@@ -6,21 +6,28 @@ import logging
 import pickle
 import signal
 
-logging.basicConfig(
-    format='%(asctime)s.%(msecs)03d %(levelname)s - %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+LOG_FORMAT = '%(asctime)s.%(msecs)03d %(levelname)s - %(message)s'
+LOG_DATEFMT = '%m/%d/%Y %H:%M:%S'
+
+logger = logging.getLogger(__name__)
+
+
+def configure_logging(level=logging.INFO):
+    """Configures root logging for the server and worker processes."""
+    logging.basicConfig(format=LOG_FORMAT, datefmt=LOG_DATEFMT, level=level)
 
 
 def task_wrapper(serialized_task):
     """Unpickles task, runs it and pickles result."""
     task = pickle.loads(serialized_task)
-    logging.info('Running %s', str(task))
+    logger.info('Running %s', str(task))
     return cloudpickle.dumps(task())
 
 
-def _silence_sigint():
-    """Silences SIGINT"""
+def _init_worker():
+    """Initializes a worker process by ignoring SIGINT and setting up logging."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    configure_logging()
 
 
 class QServer:
@@ -43,7 +50,7 @@ class QServer:
             result = await loop.run_in_executor(
                 self.executor, task_wrapper, serialized_task)
         except Exception as exc:  # pylint: disable=broad-except
-            logging.error('%s: %s', type(exc).__name__, str(exc))
+            logger.error('%s: %s', type(exc).__name__, str(exc))
             result = cloudpickle.dumps(exc)
         writer.write(result)
         await writer.drain()
@@ -69,7 +76,7 @@ class QServer:
 
     def run_forever(self):
         """Starts server."""
-        logging.info('Starting server on %s:%s', self.host, self.port)
+        logger.info('Starting server on %s:%s', self.host, self.port)
         asyncio.run(self._serve())
 
     def shutdown(self):
@@ -88,5 +95,5 @@ class QServer:
             An instance of the server.
         """
         pool_executor = concurrent.futures.ProcessPoolExecutor(
-            max_workers=num_workers, initializer=_silence_sigint)
+            max_workers=num_workers, initializer=_init_worker)
         return cls(host, port, pool_executor)
